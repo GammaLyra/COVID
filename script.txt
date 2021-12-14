@@ -1,8 +1,8 @@
 rm COVID_CV_GVA.db
 rm COVID.db
-sqlite3 COVID_CV_GVA.db ".read base_datos_GVA.sql"
+sqlite3 COVID_CV_GVA.db ".read creacion_BD_datos_GVA.sql"
 
-python3 Covid_CV_GVA_script.py
+python3 -W ignore Covid_CV_GVA_script.py
 python3 Covid_CV_Ministerio-script.py
 python3 Covid_ESP_Ministerio-script.py
 python3 Vacunacion_script.py

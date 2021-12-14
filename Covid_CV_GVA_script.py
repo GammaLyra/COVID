@@ -2,15 +2,17 @@ import pandas as pd
 import numpy as np
 pd.plotting.register_matplotlib_converters()
 import matplotlib.pyplot as plt
-# get_ipython().run_line_magic('matplotlib', 'inline')
 import seaborn as sns
 import sqlite3
 import matplotlib.dates as mdates
 from statsmodels.tsa.seasonal import seasonal_decompose
 
-# Consulta datos totales por día
-
+# Consulta tabla con datos introduccidos manualmente de la Generalitat. Datos diarios separados por rango de edad y sezo.
 con=sqlite3.connect('COVID_CV_GVA.db')
+
+#----------------------------------------------------------------------------
+# Datos agrupados para rango de edad y sexo
+#----------------------------------------------------------------------------
 
 data=pd.read_sql_query("""
                         SELECT fecha,SUM(acumulados_caso) AS casos_tot,SUM(acumulado_fallecidos) AS fallecidos_tot
@@ -37,7 +39,6 @@ data=data.reset_index()
 
 
 # Calculamos la indicencia a 14 dias
-
 IA_14d=[None]*13
 
 for i in data.index[13:]:
@@ -51,7 +52,6 @@ IA_14d=np.array(IA_14d,dtype=float)
 data["IA_14d"]=IA_14d
 
 # Calculamos la indicencia a 7 días
-
 IA_7d=[None]*6
 
 for i in data.index[6:]:
@@ -65,8 +65,7 @@ IA_7d=np.array(IA_7d,dtype=float)
 data["IA_7d"]=IA_7d
 
 
-# Creamos tablas con una submuestra de la tabla original para luego representar
-
+# Volvemos a poner la columna de fecha como indice
 data=data.set_index("fecha")
 
 # Sumamos los datos semanalmente
@@ -76,16 +75,20 @@ data_sem.drop("fallecidos_tot",axis=1,inplace=True)
 data_sem.drop("IA_14d",axis=1,inplace=True)
 data_sem.drop("IA_7d",axis=1,inplace=True)
 
-# Guardamos la tabla en un csv
+# guardamos el resultado de haber agrupado por edades y sexo y las inicidencias en una tabla csv
 data_temp=data.copy()
+data_temp.to_csv(path_or_buf="datos_CV_GVA_agrupados.csv")
 
+# Eliminamos los datos que tenga NULL y guardamos el resultado en otra tabla csv
 data=data.dropna()
-data.to_csv(path_or_buf="datos_todo_junto.csv")
+data.to_csv(path_or_buf="datos_CV_GVA_agrupados_noNULL.csv")
 
-data_temp.to_csv(path_or_buf="datos_todo_junto_conNULL.csv")
+# Guardamos en otra tabla csv los datos semanales
 data_sem.to_csv(path_or_buf="datos_semanales.csv")
 
-# Consulta para crear las tablas con los datos totales de las mujeres
+#--------------------------------------------------------------------------------
+# Datos agrupados de rango de edad para mujeres
+#--------------------------------------------------------------------------------
 data_mujer=pd.read_sql_query("""
                         SELECT fecha,sexo,SUM(acumulados_caso) AS casos_tot,SUM(acumulado_fallecidos) AS fallecidos_tot
                         FROM COVID_CV_GVA
@@ -102,15 +105,13 @@ data_mujer.index = pd.to_datetime(data_mujer.index)
 data_mujer['casos_24h']=data_mujer["casos_tot"].diff()
 data_mujer['fallecidos_24h']=data_mujer["fallecidos_tot"].diff()
 
-# Rellenamos las fechas que faltan y volvemos a poner la fecha como columna
+# Rellenamos las fechas que faltan
 data_mujer=data_mujer.resample("D").asfreq()
-# data_mujer=data_mujer.reset_index()
 
-data_mujer_2021=data_mujer.copy()
-data_mujer_2021=data_mujer["2020-12-31":]
+#--------------------------------------------------------------------------------
+# Datos agrupados de rango de edad para hombres 
+#--------------------------------------------------------------------------------
 
-
-# Consulta para crear las tablas con los datos totales de los hombres
 data_hombre=pd.read_sql_query("""
                         SELECT fecha,sexo,SUM(acumulados_caso) AS casos_tot,SUM(acumulado_fallecidos) AS fallecidos_tot
                         FROM COVID_CV_GVA
@@ -127,19 +128,13 @@ data_hombre.index = pd.to_datetime(data_hombre.index)
 data_hombre['casos_24h']=data_hombre["casos_tot"].diff()
 data_hombre['fallecidos_24h']=data_hombre["fallecidos_tot"].diff()
 
-# Rellenamos las fechas que faltan y volvemos a poner la fecha como columna
+# Rellenamos las fechas que faltan
 data_hombre=data_hombre.resample("D").asfreq()
-# data_hombre=data_hombre.reset_index()
-
-# data_hombre.columns
-
-data_hombre_2021=data_hombre.copy()
-data_hombre_2021=data_hombre["2020-12-31":]
 
 
 # Creamos una tabla con los datos de casos y fallecidos en 24h para hombres y mujeres separados en columnas
 
-# Copio la tabla de datos de la mujer a la que eliminamos la solumna de sexo 
+# Copio la tabla de datos de la mujer a la que eliminamos la columna de sexo 
 data_sexo=data_mujer.copy()
 data_sexo.drop("sexo",axis=1,inplace=True)
 
@@ -158,7 +153,9 @@ data_sexo=data_sexo.dropna()
 data_sexo[["casos_24h_mujer","fallecidos_24h_mujer","casos_24h_hombre","fallecidos_24h_hombre"]].to_csv(path_or_buf="datos_hombre_mujer.csv")
 
 
-# Consulta crear tabla con los datos totales para cada rango de edad
+#--------------------------------------------------------------------------------
+# Datos agregados de sexo para cada rango de edad
+#--------------------------------------------------------------------------------
 
 data_edad=pd.read_sql_query("""
                         SELECT fecha,edad,SUM(acumulados_caso) AS casos_tot,SUM(acumulado_fallecidos) AS fallecidos_tot
@@ -228,6 +225,11 @@ fallecidos_24h_edad=fallecidos_24h_edad.dropna()
 fallecidos_24h_edad.to_csv(path_or_buf="fallecidos_24h_edad.csv")
 
 
+
+# -----------------------------------------------------------------------------------------
+# IA 14d por rango de edad
+#---------------------------------------------------------------------------------------
+
 poblacion_edad=[456897,536528,516126,648759,851588,752334,580728,437862,227224,49307]
 a=["0-9","10-19","20-29","30-39","40-49","50-59","60-69","70-79","80-89","90+"]
 
@@ -259,11 +261,15 @@ casos_24h_edad=casos_24h_edad.set_index("fecha")
 
 
 IA_14d_edad=IA_14d_edad.set_index("fecha")
-IA_14d_edad.tail(10)
+#IA_14d_edad.tail(10)
 
 # Guardamos la tabla en un csv
 IA_14d_edad=IA_14d_edad.dropna()
 IA_14d_edad.to_csv(path_or_buf="IA_14d_edad.csv")
+
+#-------------------------------------------------------------
+# % de casos por rango de edad
+#-------------------------------------------------------------
 
 # Creamos una nueva tabla donde vamos a calcular el porcentaje respecto a los casos totales de ese día de los casos
 # de cada rango de edad. Para ello usamos dos tablas:
@@ -318,7 +324,11 @@ por_casos_24h_edad=por_casos_24h_edad.dropna()
 por_casos_24h_edad.to_csv(path_or_buf="por_casos_24h_edad.csv")
 
 
-# Creamos una tabla nueva solo con el porcentaje de los casos cada 24h donde cada columna es una franja de edad
+#-------------------------------------------------------------
+# % de fallecidos por rango de edad
+#-------------------------------------------------------------
+
+# Creamos una tabla nueva solo con el porcentaje de los fallecidos cada 24h donde cada columna es una franja de edad
 
 # Hacemos una copia de la tabla de la consulta de las edades para trabajar sobre ella.
 por_fallecidos_24h_edad=data_edad.copy()
@@ -342,4 +352,4 @@ por_fallecidos_24h_edad=por_fallecidos_24h_edad.dropna()
 por_fallecidos_24h_edad.to_csv(path_or_buf="por_fallecidos_24h_edad.csv")
 
 
-print(" ----- Finish datos GVA!!----------")
+print(" ----- Datos de GVA terminado----------")
