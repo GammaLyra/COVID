@@ -1,9 +1,3 @@
-#!/usr/bin/env python
-# coding: utf-8
-
-# In[1]:
-
-
 import pandas as pd
 import numpy as np
 pd.plotting.register_matplotlib_converters()
@@ -14,15 +8,11 @@ import matplotlib.dates as mdates
 from statsmodels.tsa.seasonal import seasonal_decompose
 
 
-# In[2]:
-
-
 # Leemos los datos del fichero csv
-file_path="COVID_ESP_Ministerio.csv"
+file_path="tablas_ini/COVID_ESP_Ministerio.csv"
 data=pd.read_csv(file_path,converters={"fecha":pd.to_datetime})
 
-# Cambiamos el formato de la columna UCI a float y de la fecha a dateframe
-# data["UCI"] = pd.to_numeric(data.UCI, errors='coerce')
+# Cambiamos la fecha a dateframe
 data['fecha'] = pd.to_datetime(data["fecha"].dt.strftime('%d-%m-%Y'))
 
 # Calculamos los datos diarios como la diferencia de los totales
@@ -34,16 +24,7 @@ data=data.set_index("fecha")
 data=data.resample("D").asfreq()
 data=data.reset_index()
 
-# data.head(10)
-
-# print(data.dtypes)
-
-
-# In[3]:
-
-
 # Calculamos la indicencia a 14 dias
-
 IA_14d=[None]*13
 
 for i in data.index[13:]:
@@ -56,14 +37,8 @@ IA_14d=np.array(IA_14d,dtype=float)
 
 data["IA_14d"]=IA_14d
 
-# data.tail(5)
-
-
-# In[4]:
-
 
 # Calculamos la indicencia a 7 dias
-
 IA_7d=[None]*6
 
 for i in data.index[6:]:
@@ -76,19 +51,9 @@ IA_7d=np.array(IA_7d,dtype=float)
 
 data["IA_7d"]=IA_7d
 
-# data=data.set_index("fecha")
-
-# data.tail(5)
-
-
-# In[5]:
-
 
 # Ponemos la fecha como indice
 data=data.set_index("fecha")
-
-
-# In[6]:
 
 
 # Sumamos los datos semanalmente
@@ -97,25 +62,25 @@ data_sem.drop("casos_tot",axis=1,inplace=True)
 data_sem.drop("fallecidos_tot",axis=1,inplace=True)
 data_sem.drop("IA_14d",axis=1,inplace=True)
 data_sem.drop("IA_7d",axis=1,inplace=True)
-# data_sem
 
 
-# In[7]:
+# Guardamos los datos que acabamos de calcular en tablas .csv
 
-
-# Guardamos las tablas en un fichero .csv
+# Datos de casos cada 24h, fallecidos cada 24h, IA 14d y IA 7d a los que se les a borrado los datos NULL 
 data_temp2=data[["casos_24h","fallecidos_24h","IA_14d","IA_7d"]].copy()
 data_temp2=data_temp2.dropna()
-data_temp2.to_csv(path_or_buf="data_ESP_alltime.csv")
+data_temp2.to_csv(path_or_buf="tablas_temp/datos_Ministerio_ESP_noNULL.csv")
 
+# Datos de casos cada 24h, fallecidos cada 24h, IA 14d y IA 7d con todos los datos, incluidos los NULL
+data.to_csv(path_or_buf="datos_Ministerio_ESP.csv")
+
+# Datos de hospitalizaciones y UCIS
 data_temp=data[["UCI","hospitalizados"]].copy()
 data_temp=data_temp.dropna()
-data_temp.to_csv(path_or_buf="data_ESP_hospUCI.csv")
+data_temp.to_csv(path_or_buf="tablas_temp/datos_ESP_hosp_UCI.csv")
 
+# Datos de casos y fallecidos semanales
+data_sem[["casos_24h","fallecidos_24h"]].to_csv(path_or_buf="tablas_temp/datos_ESP_sem.csv")
 
-data.to_csv(path_or_buf="data_ESP_noNULL.csv")
-
-data_sem[["casos_24h","fallecidos_24h"]].to_csv(path_or_buf="data_ESP_sem.csv")
-
-print("------ Finish datos Ministerio ESP!!!! --------")
+print("------ Datos de España del Ministerio terminado --------")
 

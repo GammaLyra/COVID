@@ -1,14 +1,16 @@
-rm COVID_CV_GVA.db
-rm COVID.db
-sqlite3 COVID_CV_GVA.db ".read creacion_BD_datos_GVA.sql"
+rm bases_datos/COVID_CV_GVA.db
+rm bases_datos/COVID.db
+
+sqlite3 bases_datos/COVID_CV_GVA.db ".read creacion_BD_datos_GVA.sql"
 
 python3 -W ignore Covid_CV_GVA_script.py
-python3 Covid_CV_Ministerio-script.py
-python3 Covid_ESP_Ministerio-script.py
+python3 -W ignore Covid_CV_Ministerio-script.py
+python3 -W ignore Covid_ESP_Ministerio-script.py
 python3 Vacunacion_script.py
 
 
-sqlite3 COVID.db ".read base_datos_completa.sql"
+sqlite3 bases_datos/COVID.db ".read base_datos_completa.sql"
+
 
 mv datos_CV_GVA_agrupados.csv tablas_temp/
 mv datos_CV_GVA_agrupados_noNULL.csv tablas_temp/
@@ -19,3 +21,4 @@ mv fallecidos_24h_edad.csv tablas_temp/
 mv IA_14d_edad.csv tablas_temp/
 mv por_casos_24h_edad.csv tablas_temp/
 mv por_fallecidos_24h_edad.csv tablas_temp/
+mv datos_CV_hosp_UCI.csv tablas_temp/
