@@ -72,7 +72,7 @@ data_temp2=data_temp2.dropna()
 data_temp2.to_csv(path_or_buf="tablas_temp/datos_Ministerio_ESP_noNULL.csv")
 
 # Datos de casos cada 24h, fallecidos cada 24h, IA 14d y IA 7d con todos los datos, incluidos los NULL
-data.to_csv(path_or_buf="datos_Ministerio_ESP.csv")
+data.to_csv(path_or_buf="tablas_temp/datos_Ministerio_ESP.csv")
 
 # Datos de hospitalizaciones y UCIS
 data_temp=data[["UCI","hospitalizados"]].copy()
