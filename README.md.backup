@@ -17,7 +17,7 @@
 <ol>
  <li> <b> <u>Base de datos parcial</u> (COVID_CV_GVA.db)</b>: La tabla inicial <i>COVID_CV_GVA.csv<i> se convierte en una base de datos (.db) para poder hacer consultas. La conversión se hace usando un script de sqlite (<i>creacion_BD_datos_GVA.sql</i>)</li>
 
- <li><b> <u>Scripts Python</u> </b>:  
+ <li><b> <u>Scripts</u> </b>:  
     <ul>
       <li><i> <b>Covid_CV_GVA_script.py</b></i>: En este script se hacen diferentes consultas usando sqlite a la base de datos que acabamos de crear (<i>COVID_CV_GVA.db</i>) con los datos de la Generalitat para operar con los datos y se crean tablas con los datos de salida que nos interesan. Tablas de salida: 
       <ul>
@@ -30,17 +30,20 @@
         <li> <i>IA_14d_edad.csv</i>: Incidencia acumulada a 14 días en cada rango de edad. Datos calculados por nosotros. </li>
         <li> <i>por_casos_24h_edad.csv</i>: Porcentaje de casos diarios en cada rango de edad respecto al total de casos diarios. Datos calculados por nosotros.</li>
         <li> <i>por_fallecidos_24h_edad.csv</i>: Porcentaje de fallecidos diarios en cada rango de edad respecto al total de fallecidos diarios. Datos calculados por nosotros. </li></ul></li>
+        
       <li> <i><b>Covid_CV_Ministerio-script.py</b>:</i> Lee la tabla inicial de los datos diarios del Ministerio para la comunidad de Valencia (<i>COVID_CV_Ministerio.csv</i>) y guardan en una tabla los datos de ingresados en UCI y hospitalizaciones. También se calcula los casos y fallecidos diarios, así como la IA a 14d y 7d, pero guardan puesto que no se utilizan. Para la Comunidad de Valencia se usan los datos proporcionados por la Generalitat (parecen más fiables), exceptuando hospitalizaciones y UCI que la GVA no los proporciona. Tabla de salida:
       <ul>
       	<li><i>datos_CV_hosp_UCI.csv</i>: Datos de hospitalizaciones y personas en UCI. Datos totales del día, no los que han ingresado nuevos ese día. </li>
-        </ul></li>   
+        </ul></li>
+        
       <li> <b><i>Covid_ESP_Ministerio-script.py</i></b>: Lee la tabla inicial de los datos para España del Ministerio (<i>COVID_CV_Ministerio.csv</i>), se calcula los casos y fallecidos diarios a partir de los acumulados, la IA a 14d y 7d, y por último se calcula los casos y fallecidos semanalmente. Todo ello se guarda en diferentes tablas. Tablas de salida: 
       <ul>
       <li><i>datos_Ministerio_ESP.csv: Datos diarios de casos y fallecidos durante ese día e incidencia acumulada a 14 días y 7 días. Datos calculados por nosotros.</i></li>
       <li><i>datos_Ministerio_ESP_noNULL.csv:</i> Lo mismo que la tabla anterior pero se han eliminado las entradas que contienen valores NULL.</li>
       <li><i>datos_ESP_hosp_UCI.csv:</i> Datos diarios de hospitalizaciones y hospitalizaciones en UCI. Datos totales del día, no los que han ingresado nuevos ese día. </li>
       <li><i>datos_ESP_sem.csv:</i> Casos y fallecidos acumulados durante 7 días. Datos calculados por nosotros.</li>
-      </ul></li>      
+      </ul></li>
+      
      <li> <b><i>Vacunacion_script.py<i></b>: Lee las tablas iniciales de vacunación en España (<i>vacunados_1dosis_210621.csv</i> y <i>vacunados_2dosis_210621.csv</i>) y guarda en dos tablas los datos que nos interesan sobre la vacunación. Tablas de salida:
      <ul>
      <li><i>vac_ESP_VAL_lastday.csv</i>: Contiene los datos sobre el porcentaje de población vacunada con 1 dosis y 2 dosis para España y la C. Valenciana en el último día.</li>

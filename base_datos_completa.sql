@@ -2,7 +2,7 @@
 .import tablas_temp/datos_GVA_CV.csv datos_GVA_CV
 .schema datos_GVA_CV
 .import tablas_temp/datos_GVA_CV_noNULL.csv datos_GVA_CV_noNULL
-.schema datos_GVA_CV
+.schema datos_GVA_CV_noNUL
 .import tablas_temp/datos_CV_sem.csv datos_CV_sem
 .schema datos_CV_sem
 .import tablas_temp/datos_hombre_mujer.csv datos_hombre_mujer
@@ -27,9 +27,8 @@
 .schema datos_ESP_hosp_UCI
 .import tablas_temp/datos_ESP_sem.csv datos_ESP_sem
 .schema datos_ESP_sem
-
-.import tablas_temp/vac_ESP_VAL.csv vac_ESP_VAL
-.schema vac_ESP_VAL
+.import tablas_temp/vac_ESP_VAL_lastday.csv vac_ESP_VAL_lastday
+.schema vac_ESP_VAL_lastday
 .import tablas_temp/vac_VAL_all_days.csv vac_VAL_all_days
 .schema vac_VAL_all_days
 
