@@ -67,12 +67,13 @@ data_sem.drop("IA_7d",axis=1,inplace=True)
 # Guardamos los datos que acabamos de calcular en tablas .csv
 
 # Datos de casos cada 24h, fallecidos cada 24h, IA 14d y IA 7d a los que se les a borrado los datos NULL 
-data_temp2=data[["casos_24h","fallecidos_24h","IA_14d","IA_7d"]].copy()
+data_temp2=data[["casos_tot","fallecidos_tot","casos_24h","fallecidos_24h","IA_14d","IA_7d"]].copy()
 data_temp2=data_temp2.dropna()
-data_temp2.to_csv(path_or_buf="tablas_temp/datos_Ministerio_ESP_noNULL.csv")
+data_temp2.to_csv(path_or_buf="tablas_temp/datos_ESP_noNULL.csv")
 
 # Datos de casos cada 24h, fallecidos cada 24h, IA 14d y IA 7d con todos los datos, incluidos los NULL
-data.to_csv(path_or_buf="tablas_temp/datos_Ministerio_ESP.csv")
+data_temp3=data[["casos_tot","fallecidos_tot","casos_24h","fallecidos_24h","IA_14d","IA_7d"]].copy()
+data_temp3.to_csv(path_or_buf="tablas_temp/datos_ESP.csv")
 
 # Datos de hospitalizaciones y UCIS
 data_temp=data[["UCI","hospitalizados"]].copy()

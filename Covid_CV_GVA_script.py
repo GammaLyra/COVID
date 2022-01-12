@@ -77,11 +77,11 @@ data_sem.drop("IA_7d",axis=1,inplace=True)
 
 # guardamos el resultado de haber agrupado por edades y sexo y las inicidencias en una tabla csv
 data_temp=data.copy()
-data_temp.to_csv(path_or_buf="tablas_temp/datos_GVA_CV.csv")
+data_temp.to_csv(path_or_buf="tablas_temp/datos_CV.csv")
 
 # Eliminamos los datos que tenga NULL y guardamos el resultado en otra tabla csv
 data=data.dropna()
-data.to_csv(path_or_buf="tablas_temp/datos_GVA_CV_noNULL.csv")
+data.to_csv(path_or_buf="tablas_temp/datos_CV_noNULL.csv")
 
 # Guardamos en otra tabla csv los datos semanales
 data_sem.to_csv(path_or_buf="tablas_temp/datos_CV_sem.csv")
@@ -150,7 +150,7 @@ data_sexo["fallecidos_24h_hombre"]=data_hombre["fallecidos_24h"]
 
 # Guardamos la tabla en un csv
 data_sexo=data_sexo.dropna()
-data_sexo[["casos_24h_mujer","fallecidos_24h_mujer","casos_24h_hombre","fallecidos_24h_hombre"]].to_csv(path_or_buf="tablas_temp/datos_hombre_mujer.csv")
+data_sexo[["casos_24h_mujer","fallecidos_24h_mujer","casos_24h_hombre","fallecidos_24h_hombre"]].to_csv(path_or_buf="tablas_temp/datos_CV_hombre_mujer.csv")
 
 
 #--------------------------------------------------------------------------------
@@ -198,7 +198,7 @@ casos_24h_edad=casos_24h_edad.resample("D").asfreq()
 
 # Guardamos la tabla en un csv
 casos_24h_edad=casos_24h_edad.dropna()
-casos_24h_edad.to_csv(path_or_buf="tablas_temp/casos_24h_edad.csv")
+casos_24h_edad.to_csv(path_or_buf="tablas_temp/datos_CV_casos_edad.csv")
 
 
 # Creamos una tabla nueva solo con los fallecidos cada 24h donde cada columna es una franja de edad
@@ -222,7 +222,7 @@ fallecidos_24h_edad=fallecidos_24h_edad.resample("D").asfreq()
 
 # Guardamos la tabla en un csv
 fallecidos_24h_edad=fallecidos_24h_edad.dropna()
-fallecidos_24h_edad.to_csv(path_or_buf="tablas_temp/fallecidos_24h_edad.csv")
+fallecidos_24h_edad.to_csv(path_or_buf="tablas_temp/datos_CV_fallecidos_edad.csv")
 
 
 
@@ -265,7 +265,7 @@ IA_14d_edad=IA_14d_edad.set_index("fecha")
 
 # Guardamos la tabla en un csv
 IA_14d_edad=IA_14d_edad.dropna()
-IA_14d_edad.to_csv(path_or_buf="tablas_temp/IA_14d_edad.csv")
+IA_14d_edad.to_csv(path_or_buf="tablas_temp/datos_CV_IA_14d_edad.csv")
 
 #-------------------------------------------------------------
 # % de casos por rango de edad
@@ -321,7 +321,7 @@ por_casos_24h_edad=por_casos_24h_edad.resample("D").asfreq()
 
 # Guardamos la tabla en un csv
 por_casos_24h_edad=por_casos_24h_edad.dropna()
-por_casos_24h_edad.to_csv(path_or_buf="tablas_temp/por_casos_24h_edad.csv")
+por_casos_24h_edad.to_csv(path_or_buf="tablas_temp/datos_CV_por_casos_edad.csv")
 
 
 #-------------------------------------------------------------
@@ -349,7 +349,7 @@ por_fallecidos_24h_edad=por_fallecidos_24h_edad.resample("D").asfreq()
 
 # Guardamos la tabla en un csv
 por_fallecidos_24h_edad=por_fallecidos_24h_edad.dropna()
-por_fallecidos_24h_edad.to_csv(path_or_buf="tablas_temp/por_fallecidos_24h_edad.csv")
+por_fallecidos_24h_edad.to_csv(path_or_buf="tablas_temp/datos_CV_por_fallecidos_edad.csv")
 
 
 print(" ----- Datos de la C. Valenciana del GVA terminado----------")
