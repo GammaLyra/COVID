@@ -7,6 +7,61 @@ import sqlite3
 import matplotlib.dates as mdates
 from statsmodels.tsa.seasonal import seasonal_decompose
 
+#----------------------------------------------------------------------------
+# FUNCIONES
+#----------------------------------------------------------------------------
+
+# función para distribuir los datos entre los valores NULL 
+def redistribute_nan (df, columns=[]):
+    l = len(df)
+    for c in columns:
+        print ("redistributing column " + c + "..." + "(" + str(sum(np.isnan(df[c]))) + ")")
+        for i in range(l-1,0,-1): # Ignora la primera fila ya que siempre es NULL
+            # Busca los valores negativos
+            if np.isnan(df.iloc[i][c]):
+                n = 1
+                # Calcula el número consecutivo de NULL values
+                while (np.isnan(df.iloc[i-n][c])):
+                    n += 1
+                # hacemos la distribución de los valores entre los NULL
+                value = df.iloc[i+1][c]
+                value_r = int(value/(n+2)) # instead of n+1 to double the weight of current day
+                df.at[df.index[i+1],c] = df.iloc[i+1][c] - value_r * n
+                for j in range(n):
+                    df.at[df.index[i-j],c] = value_r
+    # Comprobamos que no quedan NULL sin corregir (solo el primer valor)            
+    for c in columns:
+        print ("after redistributing column " + c + "..." + "(" + str(sum(np.isnan(df[c]))) + ")")
+    print ('')
+    df_red = df
+    return df_red
+
+# función para corregir los valores negativos
+def redistribute_negatives (df, columns=[], ndays = 30):
+    l = len(df)
+    for c in columns:
+        print ("redistributing column " + c + "..." + "(" + str(sum(df[c]<0)) + ")")
+        for i in range(l-1,0,-1): # ignore first row as it is known to be missing
+            # look for negative values
+            if df.iloc[i][c] < 0:
+                value = df.iloc[i][c]
+                first = max(0,i-ndays)
+                prev = df.iloc[first:i][c]
+                lprev = sum(~np.isnan(prev))
+                value_r = np.floor (value / lprev)
+#                     print (i, first, value, value_r, prev.min())
+                for j in range(i-1,first-1,-1):
+                    df.iloc[j][c] = df.iloc[j][c] + value_r
+                df.iloc[i][c] = value - value_r * lprev
+                        
+    for c in columns:
+        print ("after redistributing column " + c + "..." + "(" + str(sum(df[c]<0)) + ")")
+    print ('')
+    df_red = df
+    return df_red
+#----------------------------------------------------------------------------
+#----------------------------------------------------------------------------
+
 # Consulta tabla con datos introduccidos manualmente de la Generalitat. Datos diarios separados por rango de edad y sezo.
 con=sqlite3.connect('bases_datos/COVID_CV_GVA.db')
 
@@ -35,53 +90,61 @@ temp=data.copy()
 # Rellenamos las fechas que faltan y volvemos a poner la fecha como columna en vez de indice.
 data=data.resample("D").asfreq()
 
-data=data.reset_index()
+# Redistribuimos los datos entre los valores NULL en las columnas de casos_24h y fallecidos_24h
+cols_red = ['casos_24h','fallecidos_24h']
+
+data_temp=data.copy()
+csum, fsum = data_temp[cols_red].sum()
+
+print ("** REDISTRIBUTE MISSING VALUES CASOS/FALLECIDOS AGUPADOS**")
+data_red = redistribute_nan (data_temp,columns=cols_red)
+csum_red, fsum_red = data_red[cols_red].sum()
+
+print ("** TOTAL SUM **")
+print("before", int(csum), int(fsum))
+print("after", int(csum_red), int(fsum_red), '\n')
 
 
 # Calculamos la indicencia a 14 dias
+data_red=data_red.reset_index()
 IA_14d=[None]*13
 
-for i in data.index[13:]:
-    if (not np.isnan(data["casos_24h"].iloc[i])):
-        IA_14d.append("{:.2f}".format(data["casos_24h"].iloc[i+1-14:i+1].sum()*1e5/4.975e6))
+for i in data_red.index[13:]:
+    if (not np.isnan(data_red["casos_24h"].iloc[i])):
+        IA_14d.append("{:.2f}".format(data_red["casos_24h"].iloc[i+1-14:i+1].sum()*1e5/4.975e6))
     else:
         IA_14d.append(None)
 
 IA_14d=np.array(IA_14d,dtype=float)
 
-data["IA_14d"]=IA_14d
+data_red["IA_14d"]=IA_14d
 
 # Calculamos la indicencia a 7 días
 IA_7d=[None]*6
 
-for i in data.index[6:]:
-    if (not np.isnan(data["casos_24h"].iloc[i])):
-        IA_7d.append("{:.2f}".format(data["casos_24h"].iloc[i+1-7:i+1].sum()*1e5/4.975e6))
+for i in data_red.index[6:]:
+    if (not np.isnan(data_red["casos_24h"].iloc[i])):
+        IA_7d.append("{:.2f}".format(data_red["casos_24h"].iloc[i+1-7:i+1].sum()*1e5/4.975e6))
     else:
         IA_7d.append(None)
 
 IA_7d=np.array(IA_7d,dtype=float)
 
-data["IA_7d"]=IA_7d
+data_red["IA_7d"]=IA_7d
 
 
 # Volvemos a poner la columna de fecha como indice
-data=data.set_index("fecha")
+data_red=data_red.set_index("fecha")
 
 # Sumamos los datos semanalmente
-data_sem=data.resample('W').sum()
+data_sem=data_red.resample('W').sum()
 data_sem.drop("casos_tot",axis=1,inplace=True)
 data_sem.drop("fallecidos_tot",axis=1,inplace=True)
 data_sem.drop("IA_14d",axis=1,inplace=True)
 data_sem.drop("IA_7d",axis=1,inplace=True)
 
-# guardamos el resultado de haber agrupado por edades y sexo y las inicidencias en una tabla csv
-data_temp=data.copy()
-data_temp.to_csv(path_or_buf="tablas_temp/datos_CV.csv")
-
-# Eliminamos los datos que tenga NULL y guardamos el resultado en otra tabla csv
-data=data.dropna()
-data.to_csv(path_or_buf="tablas_temp/datos_CV_noNULL.csv")
+# guardamos el resultado de haber agrupado por edades y sexo, haber tratado los datos y las inicidencias en una tabla csv
+data_red.to_csv(path_or_buf="tablas_temp/datos_CV.csv")
 
 # Guardamos en otra tabla csv los datos semanales
 data_sem.to_csv(path_or_buf="tablas_temp/datos_CV_sem.csv")
@@ -108,6 +171,24 @@ data_mujer['fallecidos_24h']=data_mujer["fallecidos_tot"].diff()
 # Rellenamos las fechas que faltan
 data_mujer=data_mujer.resample("D").asfreq()
 
+# Eliminamos la columna donde indica el sexo
+data_mujer.drop("sexo",axis=1,inplace=True)
+
+# Redistribuimos los datos entre los valores NULL en las columnas de casos_24h y fallecidos_24h
+cols_red = ['casos_24h','fallecidos_24h']
+
+data_temp_mujer=data_mujer.copy()
+csum, fsum = data_temp_mujer[cols_red].sum()
+
+print ("** REDISTRIBUTE MISSING VALUES CASOS/FALLECIDOS MUJERES **")
+data_red_mujer = redistribute_nan (data_temp_mujer,columns=cols_red)
+csum_red, fsum_red = data_red_mujer[cols_red].sum()
+
+print ("** TOTAL SUM **")
+print("before", int(csum), int(fsum))
+print("after", int(csum_red), int(fsum_red), '\n')
+
+
 #--------------------------------------------------------------------------------
 # Datos agrupados de rango de edad para hombres 
 #--------------------------------------------------------------------------------
@@ -131,26 +212,80 @@ data_hombre['fallecidos_24h']=data_hombre["fallecidos_tot"].diff()
 # Rellenamos las fechas que faltan
 data_hombre=data_hombre.resample("D").asfreq()
 
+# Eliminamos la columna donde indica el sexo
+data_hombre.drop("sexo",axis=1,inplace=True)
+
+# Redistribuimos los datos entre los valores NULL en las columnas de casos_24h y fallecidos_24h
+cols_red = ['casos_24h','fallecidos_24h']
+
+data_temp_hombre=data_hombre.copy()
+csum, fsum = data_temp_hombre[cols_red].sum()
+
+print ("** REDISTRIBUTE MISSING VALUES CASOS/FALLECIDOS HOMBRES **")
+data_red_hombre = redistribute_nan (data_temp_hombre,columns=cols_red)
+csum_red, fsum_red = data_red_hombre[cols_red].sum()
+
+print ("** TOTAL SUM **")
+print("before", int(csum), int(fsum))
+print("after", int(csum_red), int(fsum_red), '\n')
+
 
 # Creamos una tabla con los datos de casos y fallecidos en 24h para hombres y mujeres separados en columnas
 
 # Copio la tabla de datos de la mujer a la que eliminamos la columna de sexo 
-data_sexo=data_mujer.copy()
-data_sexo.drop("sexo",axis=1,inplace=True)
+data_sexo=data_red_mujer.copy()
 
 # Cambio el nombre de las columnas
 data_sexo.rename(columns={"casos_24h": "casos_24h_mujer", "fallecidos_24h": "fallecidos_24h_mujer",
                          "casos_tot": "casos_tot_mujer","fallecidos_tot": "fallecidos_tot_mujer"},inplace=True)
 
 # Añadimos a la tabla los datos del hombre
-data_sexo["casos_tot_hombre"]=data_hombre["casos_tot"]
-data_sexo["fallecidos_tot_hombre"]=data_hombre["fallecidos_tot"]
-data_sexo["casos_24h_hombre"]=data_hombre["casos_24h"]
-data_sexo["fallecidos_24h_hombre"]=data_hombre["fallecidos_24h"]
+data_sexo["casos_tot_hombre"]=data_red_hombre["casos_tot"]
+data_sexo["fallecidos_tot_hombre"]=data_red_hombre["fallecidos_tot"]
+data_sexo["casos_24h_hombre"]=data_red_hombre["casos_24h"]
+data_sexo["fallecidos_24h_hombre"]=data_red_hombre["fallecidos_24h"]
 
 # Guardamos la tabla en un csv
-data_sexo=data_sexo.dropna()
 data_sexo[["casos_24h_mujer","fallecidos_24h_mujer","casos_24h_hombre","fallecidos_24h_hombre"]].to_csv(path_or_buf="tablas_temp/datos_CV_hombre_mujer.csv")
+
+# -----------------------------------------------------------------------------------------
+# IA 14d por sexo
+#---------------------------------------------------------------------------------------
+
+poblacion_sexo=[2566744,2491394]
+d=["fallecidos_24h_mujer","fallecidos_24h_hombre","casos_24h_mujer","casos_24h_hombre","casos_tot_hombre","fallecidos_tot_hombre","casos_tot_mujer","fallecidos_tot_mujer"]
+a=["casos_24h_mujer","casos_24h_hombre"]
+b=["IA_14d_mujer","IA_14d_hombre"]
+
+# Eliminamos el indice de las fechas para poder operar con la tabla
+data_sexo=data_sexo.reset_index()
+
+# Creamos un DataFrame solo con fechas donde guardaremos la IA 14d por rango de edad
+IA_14d_sexo=data_sexo.copy()
+for j in list(range(len(d))):
+    IA_14d_sexo.drop(d[j],axis=1,inplace=True) 
+    
+# Calculo de la IA 14d por rango de edad
+for j in list(range(len(a))):
+    IA_temp_sexo=[None]*13
+    
+    for i in data_sexo[a[j]].index[13:]:
+        if (not np.isnan(data_sexo[a[j]].iloc[i])):
+            IA_temp_sexo.append("{:.2f}".format(data_sexo[a[j]].iloc[i+1-14:i+1].sum()*1e5/poblacion_sexo[j]))
+        else:
+            IA_temp_sexo.append(None)
+        
+    IA_temp_sexo=np.array(IA_temp_sexo,dtype=float)
+    IA_14d_sexo[b[j]]=IA_temp_sexo
+
+
+# Volvemos a poner el indice de las fechas
+data_sexo=data_sexo.set_index("fecha")
+IA_14d_sexo=IA_14d_sexo.set_index("fecha")
+
+
+# Guardamos la tabla en un csv
+IA_14d_sexo.to_csv(path_or_buf="tablas_temp/datos_CV_IA_14d_sexo.csv")
 
 
 #--------------------------------------------------------------------------------
@@ -194,11 +329,16 @@ casos_24h_edad=casos_24h_edad.pivot(index='fecha', columns='edad', values='casos
 casos_24h_edad.index= pd.to_datetime(casos_24h_edad.index)
 casos_24h_edad=casos_24h_edad.resample("D").asfreq()
 
-# casos_24h_edad.tail(10)
+# Redistribuimos los datos entre los valores NULL en las columnas de casos_24h y fallecidos_24h
+cols_red = ["0-9","10-19","20-29","30-39","40-49","50-59","60-69","70-79","80-89","90+"]
+
+data_temp_casos_edad=casos_24h_edad.copy()
+
+print ("** REDISTRIBUTE MISSING VALUES CASOS EDAD**")
+data_red_casos_edad = redistribute_nan (data_temp_casos_edad,columns=cols_red)
 
 # Guardamos la tabla en un csv
-casos_24h_edad=casos_24h_edad.dropna()
-casos_24h_edad.to_csv(path_or_buf="tablas_temp/datos_CV_casos_edad.csv")
+data_red_casos_edad.to_csv(path_or_buf="tablas_temp/datos_CV_casos_edad.csv")
 
 
 # Creamos una tabla nueva solo con los fallecidos cada 24h donde cada columna es una franja de edad
@@ -218,11 +358,17 @@ fallecidos_24h_edad=fallecidos_24h_edad.pivot(index='fecha', columns='edad', val
 fallecidos_24h_edad.index= pd.to_datetime(fallecidos_24h_edad.index)
 fallecidos_24h_edad=fallecidos_24h_edad.resample("D").asfreq()
 
-# fallecidos_24h_edad.tail(60)
+# Redistribuimos los datos entre los valores NULL en las columnas de casos_24h y fallecidos_24h
+cols_red = ["0-9","10-19","20-29","30-39","40-49","50-59","60-69","70-79","80-89","90+"]
+
+data_temp_fallecidos_edad=fallecidos_24h_edad.copy()
+
+print ("** REDISTRIBUTE MISSING VALUES FALLECIDOS EDAD**")
+data_red_fallecidos_edad = redistribute_nan (data_temp_fallecidos_edad,columns=cols_red)
+
 
 # Guardamos la tabla en un csv
-fallecidos_24h_edad=fallecidos_24h_edad.dropna()
-fallecidos_24h_edad.to_csv(path_or_buf="tablas_temp/datos_CV_fallecidos_edad.csv")
+data_red_fallecidos_edad.to_csv(path_or_buf="tablas_temp/datos_CV_fallecidos_edad.csv")
 
 
 
@@ -230,24 +376,24 @@ fallecidos_24h_edad.to_csv(path_or_buf="tablas_temp/datos_CV_fallecidos_edad.csv
 # IA 14d por rango de edad
 #---------------------------------------------------------------------------------------
 
-poblacion_edad=[456897,536528,516126,648759,851588,752334,580728,437862,227224,49307]
+poblacion_edad=[441303,540113,516278,627111,849342,763828,597320,435684,235556,51603]
 a=["0-9","10-19","20-29","30-39","40-49","50-59","60-69","70-79","80-89","90+"]
 
 # Eliminamos el indice de las fechas para poder operar con la tabla
-casos_24h_edad=casos_24h_edad.reset_index()
+data_red_casos_edad=data_red_casos_edad.reset_index()
 
 # Creamos un DataFrame solo con fechas donde guardaremos la IA 14d por rango de edad
-IA_14d_edad=casos_24h_edad.copy()
-for j in list(range(10)):
+IA_14d_edad=data_red_casos_edad.copy()
+for j in list(range(len(a))):
     IA_14d_edad.drop(a[j],axis=1,inplace=True)  
     
 # Calculo de la IA 14d por rango de edad
-for j in list(range(10)):
+for j in list(range(len(a))):
     IA_temp_edad=[None]*13
     
-    for i in casos_24h_edad[a[j]].index[13:]:
-        if (not np.isnan(casos_24h_edad[a[j]].iloc[i])):
-            IA_temp_edad.append("{:.2f}".format(casos_24h_edad[a[j]].iloc[i+1-14:i+1].sum()*1e5/poblacion_edad[j]))
+    for i in data_red_casos_edad[a[j]].index[13:]:
+        if (not np.isnan(data_red_casos_edad[a[j]].iloc[i])):
+            IA_temp_edad.append("{:.2f}".format(data_red_casos_edad[a[j]].iloc[i+1-14:i+1].sum()*1e5/poblacion_edad[j]))
         else:
             IA_temp_edad.append(None)
         
@@ -256,7 +402,7 @@ for j in list(range(10)):
 
 
 # Volvemos a poner el indice de las fechas
-casos_24h_edad=casos_24h_edad.set_index("fecha")
+data_red_casos_edad=data_red_casos_edad.set_index("fecha")
 
 
 
@@ -264,8 +410,9 @@ IA_14d_edad=IA_14d_edad.set_index("fecha")
 #IA_14d_edad.tail(10)
 
 # Guardamos la tabla en un csv
-IA_14d_edad=IA_14d_edad.dropna()
 IA_14d_edad.to_csv(path_or_buf="tablas_temp/datos_CV_IA_14d_edad.csv")
+
+
 
 #-------------------------------------------------------------
 # % de casos por rango de edad
@@ -320,7 +467,6 @@ por_casos_24h_edad.index= pd.to_datetime(por_casos_24h_edad.index)
 por_casos_24h_edad=por_casos_24h_edad.resample("D").asfreq()
 
 # Guardamos la tabla en un csv
-por_casos_24h_edad=por_casos_24h_edad.dropna()
 por_casos_24h_edad.to_csv(path_or_buf="tablas_temp/datos_CV_por_casos_edad.csv")
 
 
@@ -348,7 +494,6 @@ por_fallecidos_24h_edad.index= pd.to_datetime(por_fallecidos_24h_edad.index)
 por_fallecidos_24h_edad=por_fallecidos_24h_edad.resample("D").asfreq()
 
 # Guardamos la tabla en un csv
-por_fallecidos_24h_edad=por_fallecidos_24h_edad.dropna()
 por_fallecidos_24h_edad.to_csv(path_or_buf="tablas_temp/datos_CV_por_fallecidos_edad.csv")
 
 

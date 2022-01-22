@@ -10,10 +10,10 @@ from statsmodels.tsa.seasonal import seasonal_decompose
 
 # Leemos los datos del fichero csv
 file1_path="tablas_ini/vacunados_1dosis_210621.csv"
-vac_1dosis_ESP=pd.read_csv(file1_path,converters={"Fecha":pd.to_datetime})
+vac_1dosis_ESP=pd.read_csv(file1_path,converters={"fecha":pd.to_datetime})
 
 file2_path="tablas_ini/vacunados_2dosis_210621.csv"
-vac_2dosis_ESP=pd.read_csv(file2_path,converters={"Fecha":pd.to_datetime})
+vac_2dosis_ESP=pd.read_csv(file2_path,converters={"fecha":pd.to_datetime})
 
 
 
@@ -48,7 +48,7 @@ df1=df1.loc[((df1['Comunidad'] == "C. Valenciana") | (df1['Comunidad'] == "Espa�
 df1=df1.iloc[-2:]
 
 # Eliminamos los datos que no vamos a usar
-df1.drop("Fecha",axis=1,inplace=True)
+df1.drop("fecha",axis=1,inplace=True)
 df1.drop("vac_80+",axis=1,inplace=True)
 df1.drop("vac_70-79",axis=1,inplace=True)
 df1.drop("vac_60-69",axis=1,inplace=True)
@@ -84,7 +84,7 @@ df2=df2.loc[((df2['Comunidad'] == "C. Valenciana") | (df2['Comunidad'] == "Espa�
 
 df2=df2.iloc[-2:]
 
-df2.drop("Fecha",axis=1,inplace=True)
+df2.drop("fecha",axis=1,inplace=True)
 df2.drop("vac_80+",axis=1,inplace=True)
 df2.drop("vac_70-79",axis=1,inplace=True)
 df2.drop("vac_60-69",axis=1,inplace=True)
@@ -124,7 +124,7 @@ df_new.to_csv(path_or_buf="tablas_temp/vac_ESP_VAL_lastday.csv")
 # Primero trabajamos con la tabla de 1 dosis
 vac_VAL_1dosis=vac_1dosis_ESP.copy()
 vac_VAL_1dosis=vac_VAL_1dosis.reset_index()
-vac_VAL_1dosis=vac_VAL_1dosis.set_index("Fecha")
+vac_VAL_1dosis=vac_VAL_1dosis.set_index("fecha")
 
 # Selecionamos solo los datos de la comunidad de Valencia
 vac_VAL_1dosis=vac_VAL_1dosis.loc[(vac_VAL_1dosis['Comunidad'] == "C. Valenciana")]
@@ -142,19 +142,19 @@ vac_VAL_1dosis.drop("vac_12-19",axis=1,inplace=True)
 vac_VAL_1dosis.drop("vac_5-11",axis=1,inplace=True)
 vac_VAL_1dosis.drop("por_tot",axis=1,inplace=True)
 
-vac_VAL_1dosis.drop("tot_vac",axis=1,inplace=True)
+#vac_VAL_1dosis.drop("tot_vac",axis=1,inplace=True)
 vac_VAL_1dosis.drop("pobl_tot",axis=1,inplace=True)
 
 # Renombramos las columnas
 vac_VAL_1dosis = vac_VAL_1dosis.rename(columns={"por_80+":"80+ 1dosis", "por_70-79":"70-79 1dosis", "por_60-69":"60-69 1dosis",
                  "por_50-59":"50-59 1dosis", "por_40-49":"40-49 1dosis", "por_30-39":"30-39 1dosis",
-                 "por_20-29":"20-29 1dosis", "por_12-19":"12-19 1dosis", "por_5-11":"5-11 1dosis"})
+                 "por_20-29":"20-29 1dosis", "por_12-19":"12-19 1dosis", "por_5-11":"5-11 1dosis","tot_vac":"total 1 dosis"})
 
 
 # Hacemos lo mismo que acabamos de hacer pero para la 2 dosis
 vac_VAL_2dosis=vac_2dosis_ESP.copy()
 vac_VAL_2dosis=vac_VAL_2dosis.reset_index()
-vac_VAL_2dosis=vac_VAL_2dosis.set_index("Fecha")
+vac_VAL_2dosis=vac_VAL_2dosis.set_index("fecha")
 
 
 vac_VAL_2dosis=vac_VAL_2dosis.loc[(vac_VAL_2dosis['Comunidad'] == "C. Valenciana")]
@@ -172,16 +172,85 @@ vac_VAL_2dosis.drop("vac_12-19",axis=1,inplace=True)
 vac_VAL_2dosis.drop("vac_5-11",axis=1,inplace=True)
 vac_VAL_2dosis.drop("por_tot",axis=1,inplace=True)
 
-vac_VAL_2dosis.drop("tot_vac",axis=1,inplace=True)
+#vac_VAL_2dosis.drop("tot_vac",axis=1,inplace=True)
 vac_VAL_2dosis.drop("pobl_tot",axis=1,inplace=True)
 
 vac_VAL_2dosis = vac_VAL_2dosis.rename(columns={"por_80+":"80+ 2dosis", "por_70-79":"70-79 2dosis", "por_60-69":"60-69 2dosis",
                  "por_50-59":"50-59 2dosis", "por_40-49":"40-49 2dosis", "por_30-39":"30-39 2dosis",
-                 "por_20-29":"20-29 2dosis", "por_12-19":"12-19 2dosis", "por_5-11":"5-11 2dosis"})
+                 "por_20-29":"20-29 2dosis", "por_12-19":"12-19 2dosis", "por_5-11":"5-11 2dosis","tot_vac":"total 2 dosis"})
 
 # Guardamos los resultados en una tabla csv
 vac_VAL=pd.concat([vac_VAL_1dosis,vac_VAL_2dosis],axis=1)
 vac_VAL.to_csv(path_or_buf="tablas_temp/vac_VAL_all_days.csv")
+
+
+#------------------------------------------------------------------------------------------------------
+# Creamos una tabla que contenga los datos de España para todos los días
+#------------------------------------------------------------------------------------------------------
+
+# Primero trabajamos con la tabla de 1 dosis
+vac_ESP_1dosis=vac_1dosis_ESP.copy()
+vac_ESP_1dosis=vac_ESP_1dosis.reset_index()
+vac_ESP_1dosis=vac_ESP_1dosis.set_index("fecha")
+
+# Selecionamos solo los datos de la comunidad de Valencia
+vac_ESP_1dosis=vac_ESP_1dosis.loc[(vac_ESP_1dosis['Comunidad'] == "España")]
+
+# Eliminamos los datos que no vamos a usar
+vac_ESP_1dosis.drop("Comunidad",axis=1,inplace=True)
+vac_ESP_1dosis.drop("vac_80+",axis=1,inplace=True)
+vac_ESP_1dosis.drop("vac_70-79",axis=1,inplace=True)
+vac_ESP_1dosis.drop("vac_60-69",axis=1,inplace=True)
+vac_ESP_1dosis.drop("vac_50-59",axis=1,inplace=True)
+vac_ESP_1dosis.drop("vac_40-49",axis=1,inplace=True)
+vac_ESP_1dosis.drop("vac_30-39",axis=1,inplace=True)
+vac_ESP_1dosis.drop("vac_20-29",axis=1,inplace=True)
+vac_ESP_1dosis.drop("vac_12-19",axis=1,inplace=True)
+vac_ESP_1dosis.drop("vac_5-11",axis=1,inplace=True)
+vac_ESP_1dosis.drop("por_tot",axis=1,inplace=True)
+
+#vac_ESP_1dosis.drop("tot_vac",axis=1,inplace=True)
+vac_ESP_1dosis.drop("pobl_tot",axis=1,inplace=True)
+
+# Renombramos las columnas
+vac_ESP_1dosis = vac_ESP_1dosis.rename(columns={"por_80+":"80+ 1dosis", "por_70-79":"70-79 1dosis", "por_60-69":"60-69 1dosis",
+                 "por_50-59":"50-59 1dosis", "por_40-49":"40-49 1dosis", "por_30-39":"30-39 1dosis",
+                 "por_20-29":"20-29 1dosis", "por_12-19":"12-19 1dosis", "por_5-11":"5-11 1dosis","tot_vac":"total 1 dosis"})
+
+
+# Hacemos lo mismo que acabamos de hacer pero para la 2 dosis
+vac_ESP_2dosis=vac_2dosis_ESP.copy()
+vac_ESP_2dosis=vac_ESP_2dosis.reset_index()
+vac_ESP_2dosis=vac_ESP_2dosis.set_index("fecha")
+
+
+vac_ESP_2dosis=vac_ESP_2dosis.loc[(vac_ESP_2dosis['Comunidad'] == "C. Valenciana")]
+
+
+vac_ESP_2dosis.drop("Comunidad",axis=1,inplace=True)
+vac_ESP_2dosis.drop("vac_80+",axis=1,inplace=True)
+vac_ESP_2dosis.drop("vac_70-79",axis=1,inplace=True)
+vac_ESP_2dosis.drop("vac_60-69",axis=1,inplace=True)
+vac_ESP_2dosis.drop("vac_50-59",axis=1,inplace=True)
+vac_ESP_2dosis.drop("vac_40-49",axis=1,inplace=True)
+vac_ESP_2dosis.drop("vac_30-39",axis=1,inplace=True)
+vac_ESP_2dosis.drop("vac_20-29",axis=1,inplace=True)
+vac_ESP_2dosis.drop("vac_12-19",axis=1,inplace=True)
+vac_ESP_2dosis.drop("vac_5-11",axis=1,inplace=True)
+vac_ESP_2dosis.drop("por_tot",axis=1,inplace=True)
+
+#vac_ESP_2dosis.drop("tot_vac",axis=1,inplace=True)
+vac_ESP_2dosis.drop("pobl_tot",axis=1,inplace=True)
+
+vac_ESP_2dosis = vac_ESP_2dosis.rename(columns={"por_80+":"80+ 2dosis", "por_70-79":"70-79 2dosis", "por_60-69":"60-69 2dosis",
+                 "por_50-59":"50-59 2dosis", "por_40-49":"40-49 2dosis", "por_30-39":"30-39 2dosis",
+                 "por_20-29":"20-29 2dosis", "por_12-19":"12-19 2dosis", "por_5-11":"5-11 2dosis","tot_vac":"total 2 dosis"})
+
+# Guardamos los resultados en una tabla csv
+vac_ESP=pd.concat([vac_ESP_1dosis,vac_ESP_2dosis],axis=1)
+vac_ESP.to_csv(path_or_buf="tablas_temp/vac_ESP_all_days.csv")
+
+
 
 print("------ Datos Vacunación terminado --------")
 
