@@ -8,6 +8,32 @@ import matplotlib.dates as mdates
 from statsmodels.tsa.seasonal import seasonal_decompose
 
 
+#----------------------------------------------------------------------------
+# FUNCIONES
+#-------------------------------------------------------------------------------
+def vacunacion_total(vac_1dosis,vac_2dosis,vac):
+    p_CV=4975000
+    p_ESP=47351567
+    
+    # Nos quedamos solo con los datos que nos interesan y ponemos la fecha como indice 
+    vac_1dosis_CV=vac_1dosis.loc[(vac_1dosis['Comunidad'] == "C. Valenciana")].set_index("fecha")
+    vac_1dosis_ESP=vac_1dosis.loc[(vac_1dosis['Comunidad'] == "España")].set_index("fecha")
+    
+    vac_2dosis_CV=vac_2dosis.loc[(vac_2dosis['Comunidad'] == "C. Valenciana")].set_index("fecha")
+    vac_2dosis_ESP=vac_2dosis.loc[(vac_2dosis['Comunidad'] == "España")].set_index("fecha")
+    
+    # Sumamos todos los vacunados y calculamos el porcentaje respecto a la población total
+    vac_tot_CV_1dosis= ((vac_1dosis_CV[vac].sum(axis=1))/p_CV)*100
+    vac_tot_CV_2dosis= ((vac_2dosis_CV[vac].sum(axis=1))/p_CV)*100
+    
+    vac_tot_ESP_1dosis= ((vac_1dosis_ESP[vac].sum(axis=1))/p_ESP)*100
+    vac_tot_ESP_2dosis= ((vac_2dosis_ESP[vac].sum(axis=1))/p_ESP)*100
+    
+    return vac_tot_CV_1dosis,vac_tot_CV_2dosis,vac_tot_ESP_1dosis,vac_tot_ESP_2dosis
+    
+#-----------------------------------------------------------------------------------
+
+
 # Leemos los datos del fichero csv
 file1_path="tablas_ini/vacunados_1dosis_210621.csv"
 vac_1dosis_ESP=pd.read_csv(file1_path,converters={"fecha":pd.to_datetime})
@@ -15,7 +41,8 @@ vac_1dosis_ESP=pd.read_csv(file1_path,converters={"fecha":pd.to_datetime})
 file2_path="tablas_ini/vacunados_2dosis_210621.csv"
 vac_2dosis_ESP=pd.read_csv(file2_path,converters={"fecha":pd.to_datetime})
 
-
+temp_vac_1dosis_ESP=vac_1dosis_ESP.copy()
+temp_vac_2dosis_ESP=vac_2dosis_ESP.copy()
 
 # Ponemos la comunidad como indice
 vac_1dosis_ESP=vac_1dosis_ESP.set_index("Comunidad")
@@ -250,6 +277,49 @@ vac_ESP_2dosis = vac_ESP_2dosis.rename(columns={"por_80+":"80+ 2dosis", "por_70-
 vac_ESP=pd.concat([vac_ESP_1dosis,vac_ESP_2dosis],axis=1)
 vac_ESP.to_csv(path_or_buf="tablas_temp/vac_ESP_all_days.csv")
 
+#-----------------------------------------------------------------------------------------------------------
+# Creamos una tabla con el porcentaje total de vacunados para C. Valenciana y España en todos los periodos
+#-----------------------------------------------------------------------------------------------------------
+
+# Leemos los datos del fichero csv
+file11_path="tablas_ini/vacunados_1dosis_310321.csv"
+vac_1dosis_1=pd.read_csv(file11_path,converters={"fecha":pd.to_datetime})
+
+file12_path="tablas_ini/vacunados_2dosis_310321.csv"
+vac_2dosis_1=pd.read_csv(file12_path,converters={"fecha":pd.to_datetime})
+
+file21_path="tablas_ini/vacunados_1dosis_040621.csv"
+vac_1dosis_2=pd.read_csv(file21_path,converters={"fecha":pd.to_datetime})
+
+file22_path="tablas_ini/vacunados_2dosis_040621.csv"
+vac_2dosis_2=pd.read_csv(file22_path,converters={"fecha":pd.to_datetime})
+
+vac_1dosis_3=temp_vac_1dosis_ESP
+vac_2dosis_3=temp_vac_2dosis_ESP
+
+# Rangos de edad de cada tabla
+vac_1=["vac_80+","vac_70-79","vac_60-69","vac_50-59","vac_25-49","vac_18-24","vac_16-17"]
+vac_2=["vac_80+","vac_70-79","vac_60-69","vac_50-59","vac_40-49","vac_25-39","vac_18-24","vac_16-17"]
+vac_3=["vac_80+","vac_70-79","vac_60-69","vac_50-59","vac_40-49","vac_30-39","vac_20-29","vac_12-19","vac_5-11"]
+
+# llamamos a la función que hace que nos quedemos solo con los datos de España y la C. Valenciana y calcula el porcentaje total de vacunados cada día
+vac_tot_CV_1d_1,vac_tot_CV_2d_1,vac_tot_ESP_1d_1,vac_tot_ESP_2d_1=vacunacion_total(vac_1dosis_1,vac_2dosis_1,vac_1)
+vac_tot_CV_1d_2,vac_tot_CV_2d_2,vac_tot_ESP_1d_2,vac_tot_ESP_2d_2=vacunacion_total(vac_1dosis_2,vac_2dosis_2,vac_2)
+vac_tot_CV_1d_3,vac_tot_CV_2d_3,vac_tot_ESP_1d_3,vac_tot_ESP_2d_3=vacunacion_total(vac_1dosis_3,vac_2dosis_3,vac_3)
+
+# Unimos todas las épocas
+vac_tot_CV_1dosis=pd.concat([vac_tot_CV_1d_1,vac_tot_CV_1d_2,vac_tot_CV_1d_3],axis=0)
+vac_tot_CV_2dosis=pd.concat([vac_tot_CV_2d_1,vac_tot_CV_2d_2,vac_tot_CV_2d_3],axis=0)
+
+vac_tot_ESP_1dosis=pd.concat([vac_tot_ESP_1d_1,vac_tot_ESP_1d_2,vac_tot_ESP_1d_3],axis=0)
+vac_tot_ESP_2dosis=pd.concat([vac_tot_ESP_2d_1,vac_tot_ESP_2d_2,vac_tot_ESP_2d_3],axis=0)
+
+# Unimos todos los datos de España y la C. Valenciana con 1 dosis y 2 dosis en mismo DataFrame
+vac_tot=pd.concat([vac_tot_CV_1dosis,vac_tot_CV_2dosis,vac_tot_ESP_1dosis,vac_tot_ESP_2dosis],axis=1)
+vac_tot.columns=["C. Valenciana - 1 dosis","C. Valenciana - 2 dosis","España - 1 dosis","España - 2 dosis"]
+
+# Guardamos el resultado en una tabla csv
+vac_tot.to_csv(path_or_buf="tablas_temp/ ")
 
 
 print("------ Datos Vacunación terminado --------")

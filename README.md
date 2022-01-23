@@ -7,9 +7,17 @@
     <ul>
       <li><i><b>COVID_ESP_Ministerio.csv</b></i>: Datos diarios de España proporcionados por el Ministerio. Datos: Casos acumulados, fallecidos acumulados, ingresados en UCI, hospitalizados.</li> 
       <li><i><b>COVID_CV_Ministerio.csv</b></i>: Datos diarios de la Comunidad de Valencia proporcionados por el Ministerio. Datos: IA 14d, IA7d, casos acumulados, fallecidos acumulados, % hospitalizaciones, % UCI, ingresados totales en UCI, hospitalizados totales.</li>
-      <li><i><b>COVID_CV_GVA.csv</b></i>: Datos diarios de la Comunidad de Valencia proporcionados por la Generalitat. Los datos están separados en rango de edad y sexo. Datos: Casos acumulados, fallecidos acumulados, % casos acumulados, % fallecidos acumulados.</li> 
-      <li><i><b>vacunados_1dosis_210621.csv:</b></i> [No datos desde el 01/12/21 hasta el 10/01/22. A partir del 11/01/22 solo actualizado para la C. Valenciana y España] Datos diarios proporcionados por el Ministerio, personas vacunadas con la 1º dosis a partir del 21/06/2021. Datos separados por Comunidades y rango de edad. Datos: Población vacunada por rango de edad, % población vacunada por rango de edad, población total a vacunar, población total vacunada y % población total vacunada.</li> 
-      <li><i><b>vacunados_2dosis_210621.csv</b></i>: [No datos desde el 01/12/21 hasta el 10/01/22. A partir del 11/01/22 solo actualizado para la C. Valenciana y España] Datos diarios de España proporcionados por el Ministerio de personas vacunadas con la 2º dosis a partir del 21/06/2021. Datos separados por Comunidades y rango de edad. Datos: Población vacunada por rango de edad, % población vacunada por rango de edad, población total a vacunar, población total vacunada y % población total vacunada.</li>
+      <li><i><b>COVID_CV_GVA.csv</b></i>: Datos diarios de la Comunidad de Valencia proporcionados por la Generalitat. Los datos están separados en rango de edad y sexo. Datos: Casos acumulados, fallecidos acumulados, % casos acumulados, % fallecidos acumulados.</li>
+      <li> Gráficas de vacunación: Datos de la vacunación con 1 dosis o 2 dosis separados por Comunidades y rangos de edad proporcionadas por el Ministerio. El Ministerio ha cambiando 3 veces a lo largo del tiempo el rango de edades de las que se da la información de vacunación. Por lo tanto tenemos 6 tablas: para 1 dosis o 2 dosis en cada periodo. Las tablas contienen la siguiente información: Población vacunada por rango de edad, % población vacunada por rango de edad, población total a vacunar, población total vacunada y % población total vacunada.
+      <ul>
+      	<li><b>vacunados_1dosis_310321.csv</b>: Vacunación con 1 dosis. Periodo comprendido desde el 31/03/2021 al 03/06/2021. Esta tabla además contiene la población total que hay en cada rango de edad. Rangos de edad: 80+, 70-79, 60-69, 50-59, 25-49, 18-24, 16-17. </li>
+      	<li><b>vacunados_2dosis_310321.csv</b>: Lo mismo que la anterior pero 2 dosis</li>
+      	<li><b>vacunados_1dosis_040621.csv</b>: Vacunación con 1 dosis. Periodo comprendido desde el 04/06/2021 hasta el 18/06/2021. Rangos de edad: 80+, 70-79, 60-69, 50-59, 40-49, 25-39, 18-24, 16-17 </li>
+      	<li><b>vacunados_2dosis_040621.csv</b>: Lo mismo que la anterior pero para 2 dosis.</li>
+      	<li><b>vacunados_1dosis_210621.csv</b>: Vacunación con 1 dosis. Periodo comprendido entre 21/06/2021 hasta la actualidad. No hay datos desde el 01/12/21 hasta el 10/01/22. A partir del 11/01/22 solo actualizado para la C. Valenciana y España</li>
+      	<li><b>vacunados_2dosis_210621.csv</b>: Lo mismo que la anterior pero para 2 dosis.</li>
+      </ul>
+      </li>
  </ul>
  
  <hr>
@@ -46,7 +54,9 @@
      <li> <b><i>Vacunacion_script.py<i></b>: Lee las tablas iniciales de vacunación en España (<i>vacunados_1dosis_210621.csv</i> y <i>vacunados_2dosis_210621.csv</i>) y guarda en dos tablas los datos que nos interesan sobre la vacunación. Tablas de salida:
      <ul>
      <li><i>vac_ESP_VAL_lastday.csv</i>: Contiene los datos sobre el porcentaje de población vacunada con 1 dosis y 2 dosis para España y la C. Valenciana en el último día.</li>
-     <li><i>vac_VAL_all_days.csv</i>: Contiene los datos del porcentaje de población vacunada con 1 y 2 dosis en la C. Valenciana para todos los días desde el 21/06/2021.  </li
+     <li><i>vac_ESP_VAL_por_tot_all_days.csv</i>: Contiene el porcentaje total de vacunados cada día para España y la C. Valenciana con 1 y 2 dosis. Los datos van desde el 31/03/2021 a la actualidad (hemos unido los datos de los 3 periodos). El porcentaje es calculado por nosotros sumando los vacunados de cada rango de edad</li>
+     <li><i>vac_VAL_all_days.csv</i>: Contiene los datos del porcentaje de población vacunada con 1 y 2 dosis en la C. Valenciana para todos los días desde el 21/06/2021.  </li>
+     <li><i>vac_ESP_all_days.csv</i>: Lo mismo que la anterior pero con los datos de España.  </li>
      </ul></li>
      </li></ul></ul>
      
@@ -64,6 +74,7 @@ Una vez que tenemos la base completa solo con los datos que nos interesa, ya pod
 <li>Fallecidos diarios en la C. Valenciana y España: Se muestra también la media móvil con una ventana de 7 días.</li>
 <li>Fallecidos acumulados en una semana para la C. Valenciana y España</li>
 <li>Hospitalizados e ingresados en UCI en cada momento en la C. Valenciana y España</li>
+<li>Porcentaje de población vacunada en España y la C. Valenciana con 1 y 2 dosis respecto a la población total.</li>
 <li>Gráficas para un análisis más detallado:
 	<ul><ul>
 		<li>Casos y fallecidos diarios junto con las regiones que hemos utilizado en cada ola y los valores de la letalidad y la mortalidad en cada una de ellas. La letalidad la hemos calculado como el cociente entre los fallecidos y los casos diarios, el valor está dado en porcentaje. La mortalidad se calcula como el cociente entre los fallecidos y la población por cada 100000 habitantes.</li>
@@ -72,7 +83,7 @@ Una vez que tenemos la base completa solo con los datos que nos interesa, ya pod
 		<li>Mortalidad diaria por 100000 habitantes en la C. Valenciana y España. En texto damos también el valor de la mortalidad total</li>
 		<li>Media móvil con una ventana de 7 días de los casos y fallecidos diarios, ingresados en UCI y hospitalizados en la C. Valenciana. Se utiliza la media móvil de los casos y los fallecidos porque solo nos interesa la tendencia, además al tener una curva más suavizada se puede mostrar las cuatro curvas en la misma figura y así compararlas. </li>
 		<li>Media móvil con una ventana de 7 días de los casos y fallecidos diarios, ingresados en UCI y hospitalizados en España</li>
-		<li>Datos normalizados de la media móvil con una ventana de 7 días de los casos y fallecidos diarios, ingresados en UCI y hospitalizados en la C. Valenciana y España. La normalización que usamos es el método de máximo/mínimo. Todos los datos están normalizados, pero la región que usamos para determinar el max/min es desde el principio de la pandemia hasta el 01/12/2020, de tal forma que se queda fuera la expansión de Omicron.</li>
+		<li>Datos normalizados de la media móvil con una ventana de 7 días de los casos y fallecidos diarios, ingresados en UCI y hospitalizados en la C. Valenciana y España. La normalización que usamos es el método de máximo/mínimo. Todos los datos están normalizados, pero la región que usamos para determinar el max/min es desde el principio de la pandemia hasta el 01/12/2020, de tal forma que se queda fuera la expansión de Omicron. Incluimos la curva del porcentaje total de vacunados con la pauta completa.</li>
 		<li>Incidencia acumulada a 14 días y media móvil con una ventana de 7 días de los fallecidos diarios. De nuevo usamos la media móvil porque solo nos interesa ver la tendencia y así se ve más clara la gráfica.</li>
 	</ul></ul></li>
 <li> Gráficas de la C. Valenciana con los datos disgregados por rango de edad:

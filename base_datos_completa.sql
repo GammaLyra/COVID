@@ -31,4 +31,6 @@
 .schema vac_VAL_all_days
 .import tablas_temp/vac_ESP_all_days.csv vac_ESP_all_days
 .schema vac_ESP_all_days
+.import tablas_temp/vac_ESP_VAL_por_tot_all_days.csv vac_ESP_VAL_por_tot_all_days
+.schema vac_ESP_VAL_por_tot_all_days
 
