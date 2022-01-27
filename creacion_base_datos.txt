@@ -1,0 +1,13 @@
+rm bases_datos/COVID_CV_GVA.db
+rm bases_datos/COVID.db
+
+sqlite3 bases_datos/COVID_CV_GVA.db ".read creacion_BD_datos_GVA.sql"
+
+python3 -W ignore Covid_CV_GVA_script.py
+python3 -W ignore Covid_CV_Ministerio-script.py
+python3 -W ignore Covid_ESP_Ministerio-script.py
+python3 -W ignore Vacunacion_script.py
+
+
+sqlite3 bases_datos/COVID.db ".read base_datos_completa.sql"
+
